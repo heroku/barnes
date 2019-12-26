@@ -41,7 +41,7 @@ module Barnes
     }
 
     initializer 'barnes' do |app|
-      Barnes.start(config.barnes)
+      Barnes.start(**config.barnes)
     end
   end
 end
