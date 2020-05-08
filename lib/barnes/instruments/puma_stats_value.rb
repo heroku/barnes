@@ -17,7 +17,7 @@ module Barnes
         def initialize(stats, key)
           @stats   = stats
           @key     = key
-          @cluster = stats.key?("worker_status")
+          @cluster = stats.key?(:worker_status)
         end
 
         def single?
@@ -34,12 +34,12 @@ module Barnes
         # https://github.com/puma/puma/pull/1532
         def value
           return stats[key] if single?
-          first_worker = stats["worker_status"].first
-          return nil unless first_worker && first_worker["last_status"].key?(key)
+          first_worker = stats[:worker_status].first
+          return nil unless first_worker && first_worker[:last_status].key?(key)
 
           value = 0
-          stats["worker_status"].each do |worker_status|
-            value += worker_status["last_status"][key] || 0
+          stats[:worker_status].each do |worker_status|
+            value += worker_status[:last_status][key] || 0
           end
           return value
         end

@@ -1,5 +1,7 @@
 ## Master (unrleased)
 
+- Fix compatibility with Puma master
+
 ## 0.0.8
 
 - Fix warnings in Ruby 2.7

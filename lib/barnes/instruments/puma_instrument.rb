@@ -21,7 +21,13 @@ module Barnes
 
       def json_stats
         return {} unless @puma_has_stats
-        MultiJson.load(::Puma.stats || "{}")
+
+        stats = ::Puma.stats
+        if stats.is_a?(Hash)
+          stats
+        else
+          MultiJson.load(stats || "{}", symbolize_keys: true)
+        end
 
       # Puma loader has not been initialized yet
       rescue NoMethodError => e
@@ -38,9 +44,9 @@ module Barnes
 
         puts "Puma debug stats from barnes: #{stats}" if @debug
 
-        pool_capacity = StatValue.new(stats, "pool_capacity").value
-        max_threads   = StatValue.new(stats, "max_threads").value
-        spawned       = StatValue.new(stats, "running").value
+        pool_capacity = StatValue.new(stats, :pool_capacity).value
+        max_threads   = StatValue.new(stats, :max_threads).value
+        spawned       = StatValue.new(stats, :running).value
 
         gauges[:'pool.capacity']    = pool_capacity if pool_capacity
         gauges[:'threads.max']      = max_threads   if max_threads
