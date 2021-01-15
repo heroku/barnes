@@ -1,5 +1,7 @@
 ## Master (unrleased)
 
+- Handle half-initialize Puma failure on boot
+
 ## 0.0.8
 
 - Fix warnings in Ruby 2.7
