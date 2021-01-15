@@ -26,7 +26,6 @@ module Barnes
       # Puma loader has not been initialized yet
       rescue NoMethodError => e
         raise e unless e.message =~ /nil/
-        raise e unless e.message =~ /stats/
         return {}
       end
 
