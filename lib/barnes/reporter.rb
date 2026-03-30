@@ -30,6 +30,8 @@ module Barnes
     MAX_RETRIES = 3
     HTTP_TIMEOUT = 5
 
+    ServerError = Class.new(StandardError)
+
     def initialize(url:)
       @uri = URI.parse(url)
     end
@@ -53,17 +55,19 @@ module Barnes
     def post(body, count)
       retries = 0
       pause = 0.1
+      timestamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
       begin
         http = Net::HTTP.new(@uri.host, @uri.port)
         http.use_ssl = @uri.scheme == "https"
         http.open_timeout = HTTP_TIMEOUT
         http.read_timeout = HTTP_TIMEOUT
+        http.write_timeout = HTTP_TIMEOUT
 
         request = Net::HTTP::Post.new(@uri)
         request["Content-Type"] = "application/json"
         request["Measurements-Count"] = count.to_s
-        request["Measurements-Time"] = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+        request["Measurements-Time"] = timestamp
         request.body = body
 
         response = http.request(request)
@@ -74,17 +78,21 @@ module Barnes
         when 400..499
           $stderr.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
         when 500..599
-          raise "server error #{response.code}"
+          raise ServerError, "server error #{response.code}"
         end
-      rescue => e
+      rescue ServerError, Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout,
+             Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EHOSTUNREACH,
+             SocketError, IOError => e
         if retries < MAX_RETRIES
           retries += 1
           sleep pause
           pause *= 2
           retry
         else
-          $stderr.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.message}"
+          $stderr.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.class}: #{e.message}"
         end
+      rescue => e
+        $stderr.puts "barnes: unexpected error posting metrics: #{e.class}: #{e.message}"
       end
     end
   end

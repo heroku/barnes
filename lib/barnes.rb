@@ -23,7 +23,7 @@
 
 module Barnes
   DEFAULT_INTERVAL = 10
-  DEFAULT_PANELS   = []
+  DEFAULT_PANELS   = [].freeze
 
   # Starts the metrics reporting client.
   #
@@ -43,6 +43,7 @@ module Barnes
 
     reporter = Barnes::Reporter.new(url: url)
 
+    panels = panels.dup
     if panels.empty?
       panels << Barnes::ResourceUsage.new
     end

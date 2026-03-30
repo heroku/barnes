@@ -55,6 +55,8 @@ module Barnes
 
             puts env.to_json if @debug
             @reporter.report env
+          rescue => e
+            $stderr.puts "barnes: error during metrics collection: #{e.class}: #{e.message}"
           end
         end
       }
