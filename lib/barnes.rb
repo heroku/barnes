@@ -22,45 +22,37 @@
 #
 
 module Barnes
-  DEFAULT_INTERVAL           = 10
-  DEFAULT_AGGREGATION_PERIOD = 60
-  DEFAULT_STATSD             = :default
-  DEFAULT_PANELS             = []
+  DEFAULT_INTERVAL = 10
+  DEFAULT_PANELS   = []
 
-
-  # Starts the reporting client
+  # Starts the metrics reporting client.
+  #
+  # Collects Ruby runtime metrics (GC stats, ObjectSpace counts,
+  # Puma pool stats) and POSTs them to HEROKU_METRICS_URL.
   #
   # Arguments:
   #
-  #   - interval: How often, in seconds, to instrument and report
-  #   - aggregation_period: The minimal aggregation period in use, in seconds.
-  #   - statsd: The statsd reporter. This should be an instance of statsd-ruby
+  #   - interval: How often, in seconds, to instrument and report.
   #   - panels: The instrumentation "panels" in use. See `resource_usage.rb` for
   #     an example panel, which is the default if none are provided.
-  def self.start(interval: DEFAULT_INTERVAL, aggregation_period: DEFAULT_AGGREGATION_PERIOD, statsd: DEFAULT_STATSD, panels: DEFAULT_PANELS)
-    require 'statsd'
-    statsd_client = statsd
-    panels        = panels
-    sample_rate   = interval.to_f / aggregation_period.to_f
+  def self.start(interval: DEFAULT_INTERVAL, panels: DEFAULT_PANELS)
+    return if ENV["DYNO"]&.start_with?("run.")
 
-    if statsd_client == :default && ENV["PORT"]
-      statsd_client = Statsd.new('127.0.0.1', ENV["PORT"])
+    url = ENV["HEROKU_METRICS_URL"]
+    return unless url
+
+    reporter = Barnes::Reporter.new(url: url)
+
+    if panels.empty?
+      panels << Barnes::ResourceUsage.new
     end
 
-    if statsd_client && statsd_client != :default
-      reporter = Barnes::Reporter.new(statsd: statsd_client, sample_rate: sample_rate)
-
-      unless panels.length > 0
-        panels << Barnes::ResourceUsage.new(sample_rate)
-      end
-
-      Periodic.new(
-        reporter:    reporter,
-        sample_rate: sample_rate,
-        panels:      panels,
-        debug:       ENV['BARNES_DEBUG']
-      )
-    end
+    Periodic.new(
+      reporter: reporter,
+      interval: interval,
+      panels:   panels,
+      debug:    ENV['BARNES_DEBUG']
+    )
   end
 end
 

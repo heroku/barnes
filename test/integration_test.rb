@@ -48,9 +48,10 @@ class IntegrationTest < Minitest::Test
     port    = next_open_port
     options = {}
     options[:env] = {
-      "DYNO"         => "web.1",
-      "PORT"         => port,
-      "BARNES_DEBUG" => "1"
+      "DYNO"              => "web.1",
+      "PORT"              => port,
+      "HEROKU_METRICS_URL" => "http://127.0.0.1:#{port}/metrics",
+      "BARNES_DEBUG"      => "1"
     }
     options[:env].merge!(env) if env
     options[:wait_for] = "Use Ctrl-C to stop"
