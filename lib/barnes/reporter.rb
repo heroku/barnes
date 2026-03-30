@@ -21,41 +21,69 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+require 'net/http'
+require 'json'
+require 'uri'
+
 module Barnes
-  # The reporter is used to send stats to the server.
-  #
-  # Example:
-  #
-  #   statsd   = Statsd.new('127.0.0.1', "8125")
-  #   reporter = Reporter.new(statsd: , sample_rate: 10)
-  #   reporter.report_statsd('barnes.counters' => {"hello" => 2})
   class Reporter
-    attr_accessor :statsd, :sample_rate
+    MAX_RETRIES = 3
+    HTTP_TIMEOUT = 5
 
-    def initialize(statsd: , sample_rate:)
-      @statsd      = statsd
-      @sample_rate = sample_rate.to_f
-
-      if @statsd.respond_to?(:easy)
-        @statsd_method = statsd.method(:easy)
-      else
-        @statsd_method = statsd.method(:batch)
-      end
+    def initialize(url:)
+      @uri = URI.parse(url)
     end
 
     def report(env)
-      report_statsd env if @statsd
+      counters = {}
+      env[Barnes::COUNTERS].each { |k, v| counters["Rack.Server.All.#{k}"] = v }
+
+      gauges = {}
+      env[Barnes::GAUGES].each { |k, v| gauges["Rack.Server.All.#{k}"] = v }
+
+      count = counters.size + gauges.size
+      return if count == 0
+
+      body = JSON.generate(counters: counters, gauges: gauges)
+      post(body, count)
     end
 
-    def report_statsd(env)
-      @statsd_method.call do |statsd|
-        env[Barnes::COUNTERS].each do |metric, value|
-          statsd.count(:"Rack.Server.All.#{metric}", value, @sample_rate)
-        end
+    private
 
-        # for :gauge, use sample rate of 1, since gauges in statsd have no sampling characteristics.
-        env[Barnes::GAUGES].each do |metric, value|
-          statsd.gauge(:"Rack.Server.All.#{metric}", value, 1.0)
+    def post(body, count)
+      retries = 0
+      pause = 0.1
+
+      begin
+        http = Net::HTTP.new(@uri.host, @uri.port)
+        http.use_ssl = @uri.scheme == "https"
+        http.open_timeout = HTTP_TIMEOUT
+        http.read_timeout = HTTP_TIMEOUT
+
+        request = Net::HTTP::Post.new(@uri)
+        request["Content-Type"] = "application/json"
+        request["Measurements-Count"] = count.to_s
+        request["Measurements-Time"] = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+        request.body = body
+
+        response = http.request(request)
+
+        case response.code.to_i
+        when 200..299
+          # success
+        when 400..499
+          $stderr.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
+        when 500..599
+          raise "server error #{response.code}"
+        end
+      rescue => e
+        if retries < MAX_RETRIES
+          retries += 1
+          sleep pause
+          pause *= 2
+          retry
+        else
+          $stderr.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.message}"
         end
       end
     end
