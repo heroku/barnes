@@ -5,7 +5,7 @@ class ResourceUsageTest < Minitest::Test
   def setup
     super
     @state = {}
-    @panel = Barnes::ResourceUsage.new(1)
+    @panel = Barnes::ResourceUsage.new
     @panel.start! @state
   end
 
