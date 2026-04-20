@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 2.2.0'
 
   spec.add_runtime_dependency 'json'
+  spec.add_runtime_dependency 'logger'
   spec.add_runtime_dependency 'statsd-ruby', '~> 1.1'
 
   spec.add_development_dependency 'rack',     '~> 2'
