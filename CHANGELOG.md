@@ -1,5 +1,8 @@
 ## HEAD (unreleased)
 
+- Remove MultiJSON
+- Add logger dependency
+
 ## 0.0.9
 
 - Handle half-initialize Puma failure on boot (https://github.com/heroku/barnes/pull/37)
