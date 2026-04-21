@@ -16,12 +16,12 @@ module Barnes
       end
 
       def start!(state)
-        require 'multi_json'
+        require 'json'
       end
 
       def json_stats
         return {} unless @puma_has_stats
-        MultiJson.load(::Puma.stats || "{}")
+        JSON.load(::Puma.stats || "{}")
 
       # Puma loader has not been initialized yet
       rescue NoMethodError => e
