@@ -1,5 +1,7 @@
 ## HEAD (unreleased)
 
+- Add GitHub Actions to test against multiple Ruby versions
+
 ## 0.0.9
 
 - Handle half-initialize Puma failure on boot (https://github.com/heroku/barnes/pull/37)

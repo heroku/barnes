@@ -23,8 +23,10 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.2.0'
 
-  spec.add_runtime_dependency 'statsd-ruby', '~> 1.1'
+  spec.add_runtime_dependency 'logger'
   spec.add_runtime_dependency 'multi_json', '~> 1'
+  spec.add_runtime_dependency 'ostruct'
+  spec.add_runtime_dependency 'statsd-ruby', '~> 1.1'
 
   spec.add_development_dependency 'rack',     '~> 2'
   spec.add_development_dependency 'rake',     '>= 10'

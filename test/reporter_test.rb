@@ -14,7 +14,7 @@ class ReporterTest < Minitest::Test
   end
 
   def test_report_statsd
-    batch = MiniTest::Mock.new
+    batch = Minitest::Mock.new
 
     batch.expect :count, true, [:'Rack.Server.All.GC.allocated_objects', 10, 1.0]
     batch.expect :gauge, true, [:'Rack.Server.All.Time.pct.cpu', 9.1, 1.0]
