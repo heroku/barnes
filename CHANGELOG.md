@@ -1,5 +1,7 @@
 ## HEAD (unreleased)
 
+## 0.1.0
+
 - Add GitHub Actions to test against multiple Ruby versions
 - remove MultiJSON in favor of built-in JSON
 
