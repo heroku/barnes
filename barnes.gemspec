@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["schneems"]
   spec.email         = ["richard.schneeman@gmail.com"]
 
-  spec.summary       = 'Ruby GC stats => StatsD'
-  spec.description   = 'Report GC usage data to StatsD.'
+  spec.summary       = 'Report Ruby runtime metrics to Heroku'
+  spec.description   = 'Collect Ruby GC, ObjectSpace, and Puma metrics and report them directly to Heroku Runtime Metrics via HTTP.'
   spec.homepage      = 'https://github.com/heroku/barnes'
   spec.license       = "MIT"
 
