@@ -9,6 +9,8 @@ class ReporterTest < Minitest::Test
     @server = TCPServer.new('127.0.0.1', 0)
     @port = @server.addr[1]
     @requests = []
+    @mutex = Mutex.new
+    @request_recorded = ConditionVariable.new
     @response_status = "200 OK"
   end
 
@@ -26,9 +28,23 @@ class ReporterTest < Minitest::Test
         headers[key] = value
       end
       body = client.read(headers["Content-Length"].to_i)
-      @requests << { request_line: request_line, headers: headers, body: body }
+      @mutex.synchronize do
+        @requests << { request_line: request_line, headers: headers, body: body }
+        @request_recorded.broadcast
+      end
       client.print "HTTP/1.1 #{@response_status}\r\nContent-Length: 0\r\n\r\n"
       client.close
+    end
+  end
+
+  def wait_for_requests(n, timeout: 5)
+    deadline = Time.now + timeout
+    @mutex.synchronize do
+      while @requests.size < n
+        remaining = deadline - Time.now
+        raise "Timed out waiting for #{n} request(s) (got #{@requests.size})" if remaining <= 0
+        @request_recorded.wait(@mutex, remaining)
+      end
     end
   end
 
@@ -41,8 +57,7 @@ class ReporterTest < Minitest::Test
       Barnes::GAUGES   => { :'pool.capacity' => 40 }
     )
 
-    sleep 0.1
-    assert_equal 1, @requests.size
+    wait_for_requests(1)
     req = @requests.first
 
     assert_equal "application/json", req[:headers]["Content-Type"]
@@ -63,7 +78,7 @@ class ReporterTest < Minitest::Test
       Barnes::GAUGES   => { :'Objects.FREE' => 9999 }
     )
 
-    sleep 0.1
+    wait_for_requests(1)
     body = JSON.parse(@requests.first[:body])
     assert body["counters"].key?("Rack.Server.All.Time.wall")
     assert body["gauges"].key?("Rack.Server.All.Objects.FREE")
@@ -76,15 +91,18 @@ class ReporterTest < Minitest::Test
       Barnes::GAUGES   => {}
     )
 
-    sleep 0.1
     assert_equal 0, @requests.size
   end
 
   def test_report_retries_on_server_error
     @response_status = "500 Internal Server Error"
-    threads = (1 + Barnes::Reporter::MAX_RETRIES).times.map { accept_one_request }
+    expected_count = 1 + Barnes::Reporter::MAX_RETRIES
+    expected_count.times { accept_one_request }
 
-    reporter = Barnes::Reporter.new(url: "http://127.0.0.1:#{@port}/metrics")
+    reporter = Barnes::Reporter.new(
+      url: "http://127.0.0.1:#{@port}/metrics",
+      backoff_sleep: ->(_) {}
+    )
 
     _stderr = capture_stderr do
       reporter.report(
@@ -93,8 +111,8 @@ class ReporterTest < Minitest::Test
       )
     end
 
-    threads.each { |t| t.join(5) }
-    assert_equal 1 + Barnes::Reporter::MAX_RETRIES, @requests.size
+    wait_for_requests(expected_count)
+    assert_equal expected_count, @requests.size
   end
 
   def test_report_does_not_retry_on_client_error
@@ -110,7 +128,7 @@ class ReporterTest < Minitest::Test
       )
     end
 
-    sleep 0.1
+    wait_for_requests(1)
     assert_equal 1, @requests.size
   end
 

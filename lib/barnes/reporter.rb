@@ -32,8 +32,9 @@ module Barnes
 
     ServerError = Class.new(StandardError)
 
-    def initialize(url:)
+    def initialize(url:, backoff_sleep: ->(n) { sleep(n) })
       @uri = URI.parse(url)
+      @backoff_sleep = backoff_sleep
     end
 
     def report(env)
@@ -85,7 +86,7 @@ module Barnes
              SocketError, IOError => e
         if retries < MAX_RETRIES
           retries += 1
-          sleep pause
+          @backoff_sleep.call(pause)
           pause *= 2
           retry
         else
