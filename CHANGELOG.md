@@ -1,5 +1,13 @@
 ## HEAD (unreleased)
 
+## 1.0.0
+
+- **Breaking**: Replace StatsD with direct HTTP reporting to HEROKU_METRICS_URL
+- Remove `statsd-ruby` runtime dependency (zero runtime deps)
+- Remove `statsd:` and `aggregation_period:` parameters from `Barnes.start`
+- Remove `sample_rate` scaling from instruments
+- Barnes is a no-op when `HEROKU_METRICS_URL` is not set
+
 ## 0.1.0
 
 - Add GitHub Actions to test against multiple Ruby versions
