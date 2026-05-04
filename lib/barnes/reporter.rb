@@ -35,6 +35,7 @@ module Barnes
     def initialize(url:, backoff_sleep: ->(n) { sleep(n) })
       @uri = URI.parse(url)
       @backoff_sleep = backoff_sleep
+      @http = nil
     end
 
     def report(env)
@@ -53,25 +54,33 @@ module Barnes
 
     private
 
+    def connection
+      return @http if @http&.started?
+
+      @http = Net::HTTP.new(@uri.host, @uri.port)
+      @http.use_ssl = @uri.scheme == "https"
+      @http.open_timeout = HTTP_TIMEOUT
+      @http.read_timeout = HTTP_TIMEOUT
+      @http.write_timeout = HTTP_TIMEOUT
+      @http.keep_alive_timeout = 30
+      @http.start
+      @http
+    end
+
     def post(body, count)
       retries = 0
       pause = 0.1
+      reconnected = false
       timestamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
       begin
-        http = Net::HTTP.new(@uri.host, @uri.port)
-        http.use_ssl = @uri.scheme == "https"
-        http.open_timeout = HTTP_TIMEOUT
-        http.read_timeout = HTTP_TIMEOUT
-        http.write_timeout = HTTP_TIMEOUT
-
         request = Net::HTTP::Post.new(@uri)
         request["Content-Type"] = "application/json"
         request["Measurements-Count"] = count.to_s
         request["Measurements-Time"] = timestamp
         request.body = body
 
-        response = http.request(request)
+        response = connection.request(request)
 
         case response.code.to_i
         when 200..299
@@ -83,7 +92,8 @@ module Barnes
         end
       rescue ServerError, Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout,
              Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EHOSTUNREACH,
-             SocketError, IOError => e
+             Errno::EPIPE, SocketError, IOError => e
+        @http = nil
         if retries < MAX_RETRIES
           retries += 1
           @backoff_sleep.call(pause)
@@ -93,6 +103,7 @@ module Barnes
           $stderr.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.class}: #{e.message}"
         end
       rescue => e
+        @http = nil
         $stderr.puts "barnes: unexpected error posting metrics: #{e.class}: #{e.message}"
       end
     end
