@@ -24,6 +24,14 @@
 require 'rails/railtie'
 
 module Barnes
+  # Automatically configures barnes to run with
+  # rails. Configuration can be changed
+  # in the application.rb. For example:
+  #
+  #   module YourApp
+  #     class Application < Rails::Application
+  #     config.barnes[:interval] = 20
+  #
   class Railtie < ::Rails::Railtie
     config.barnes = {
       interval: DEFAULT_INTERVAL,
