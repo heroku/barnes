@@ -6,19 +6,10 @@ module Barnes
         :major_gc_count => :'GC.major_count',
         :minor_gc_count => :'GC.minor_gc_count' }
 
-      GAUGE_COUNTERS = {}
-
-      begin
-        GC.stat :total_allocated_objects
-      rescue ArgumentError
-        GAUGE_COUNTERS.update \
-          :total_allocated_object => :'GC.total_allocated_objects',
-          :total_freed_object => :'GC.total_freed_objects'
-      else
-        GAUGE_COUNTERS.update \
-          :total_allocated_objects => :'GC.total_allocated_objects',
-          :total_freed_objects => :'GC.total_freed_objects'
-      end
+      GAUGE_COUNTERS = {
+        :total_allocated_objects => :'GC.total_allocated_objects',
+        :total_freed_objects => :'GC.total_freed_objects'
+      }
 
       def start!(state)
         state[:ruby_gc] = GC.stat
