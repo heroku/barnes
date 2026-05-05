@@ -1,6 +1,11 @@
 module Barnes
   module Instruments
     class RubyGC
+      # Both sets are delta-computed (cur - last), but they land in
+      # different reporting buckets.  COUNTERS go to `counters` (accumulated
+      # totals the receiver can sum).  GAUGE_COUNTERS go to `gauges` so each
+      # sample is a standalone per-interval value.  Keeping them separate also
+      # excludes them from the raw-value gauge loop below.
       COUNTERS = {
         :count => :'GC.count',
         :major_gc_count => :'GC.major_count',
