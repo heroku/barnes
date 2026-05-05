@@ -70,7 +70,6 @@ module Barnes
     def post(body, count)
       retries = 0
       pause = 0.1
-      reconnected = false
       timestamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
       begin
