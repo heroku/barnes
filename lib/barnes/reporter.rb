@@ -35,6 +35,7 @@ module Barnes
     def initialize(url:, backoff_sleep: ->(n) { sleep(n) })
       @uri = URI.parse(url)
       @backoff_sleep = backoff_sleep
+      @mutex = Mutex.new
       @http = nil
     end
 
@@ -49,7 +50,7 @@ module Barnes
       return if count == 0
 
       body = JSON.generate(counters: counters, gauges: gauges)
-      post(body, count)
+      @mutex.synchronize { post(body, count) }
     end
 
     private
