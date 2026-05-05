@@ -18,7 +18,7 @@ class ReporterTest < Minitest::Test
     @server.close unless @server.closed?
   end
 
-  def accept_one_request
+  def accept_one_request(status: nil)
     Thread.new do
       client = @server.accept
       request_line = client.gets
@@ -32,7 +32,8 @@ class ReporterTest < Minitest::Test
         @requests << { request_line: request_line, headers: headers, body: body }
         @request_recorded.broadcast
       end
-      client.print "HTTP/1.1 #{@response_status}\r\nContent-Length: 0\r\n\r\n"
+      resp = status || @response_status
+      client.print "HTTP/1.1 #{resp}\r\nContent-Length: 0\r\n\r\n"
       client.close
     end
   end
@@ -113,6 +114,49 @@ class ReporterTest < Minitest::Test
 
     wait_for_requests(expected_count)
     assert_equal expected_count, @requests.size
+  end
+
+  def test_report_retries_then_succeeds
+    statuses = Queue.new
+    statuses << "500 Internal Server Error"
+    statuses << "500 Internal Server Error"
+    statuses << "200 OK"
+
+    accept_thread = Thread.new do
+      until statuses.empty?
+        client = @server.accept
+        request_line = client.gets
+        headers = {}
+        while (line = client.gets) && line != "\r\n"
+          key, value = line.strip.split(": ", 2)
+          headers[key] = value
+        end
+        body = client.read(headers["Content-Length"].to_i)
+        @mutex.synchronize do
+          @requests << { request_line: request_line, headers: headers, body: body }
+          @request_recorded.broadcast
+        end
+        client.print "HTTP/1.1 #{statuses.pop(true)}\r\nContent-Length: 0\r\n\r\n"
+        client.close
+      end
+    end
+
+    reporter = Barnes::Reporter.new(
+      url: "http://127.0.0.1:#{@port}/metrics",
+      backoff_sleep: ->(_) {}
+    )
+
+    stderr = capture_stderr do
+      reporter.report(
+        Barnes::COUNTERS => { :'GC.count' => 1 },
+        Barnes::GAUGES   => {}
+      )
+    end
+
+    accept_thread.join(5)
+    wait_for_requests(3)
+    assert_equal 3, @requests.size
+    assert_empty stderr
   end
 
   def test_report_does_not_retry_on_client_error
