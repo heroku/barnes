@@ -43,11 +43,6 @@ module Barnes
 
       require 'barnes/instruments/ruby_gc'
       instrument Barnes::Instruments::RubyGC.new
-
-      if defined? GC::OOB
-        require 'barnes/instruments/gctools_oobgc'
-        instrument Barnes::Instruments::GctoolsOobgc.new
-      end
     end
   end
 end
