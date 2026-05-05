@@ -38,10 +38,8 @@ module Barnes
       require 'barnes/instruments/stopwatch'
       instrument Barnes::Instruments::Stopwatch.new
 
-      if ObjectSpace.respond_to? :count_objects
-        require 'barnes/instruments/object_space_counter'
-        instrument Barnes::Instruments::ObjectSpaceCounter.new
-      end
+      require 'barnes/instruments/object_space_counter'
+      instrument Barnes::Instruments::ObjectSpaceCounter.new
 
       if GC.respond_to?(:stat)
         require 'barnes/instruments/ruby_gc'
