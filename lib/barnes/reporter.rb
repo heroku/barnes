@@ -93,6 +93,7 @@ module Barnes
       rescue ServerError, Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout,
              Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EHOSTUNREACH,
              Errno::EPIPE, SocketError, IOError => e
+        @http&.finish rescue nil
         @http = nil
         if retries < MAX_RETRIES
           retries += 1
@@ -103,6 +104,7 @@ module Barnes
           $stderr.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.class}: #{e.message}"
         end
       rescue => e
+        @http&.finish rescue nil
         @http = nil
         $stderr.puts "barnes: unexpected error posting metrics: #{e.class}: #{e.message}"
       end
