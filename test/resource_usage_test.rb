@@ -5,7 +5,7 @@ class ResourceUsageTest < Minitest::Test
   def setup
     super
     @state = {}
-    @panel = Barnes::ResourceUsage.new(1)
+    @panel = Barnes::ResourceUsage.new
     @panel.start! @state
   end
 
@@ -13,13 +13,11 @@ class ResourceUsageTest < Minitest::Test
     assert_in_delta 0, counter(:'Time.wall'), 1000
   end
 
-  if Process.respond_to?(:clock_gettime)
-    def test_cpu_and_idle_time
-      assert_in_delta 0, counter(:'Time.cpu'), 1000
-      assert_in_delta 0, counter(:'Time.idle'), 1000
-      assert counter(:'Time.pct.cpu')
-      assert counter(:'Time.pct.idle')
-    end
+  def test_cpu_and_idle_time
+    assert_in_delta 0, counter(:'Time.cpu'), 1000
+    assert_in_delta 0, counter(:'Time.idle'), 1000
+    assert counter(:'Time.pct.cpu')
+    assert counter(:'Time.pct.idle')
   end
 
   private def counter(metric)

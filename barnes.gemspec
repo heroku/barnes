@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["schneems"]
   spec.email         = ["richard.schneeman@gmail.com"]
 
-  spec.summary       = 'Ruby GC stats => StatsD'
-  spec.description   = 'Report GC usage data to StatsD.'
+  spec.summary       = 'Report Ruby runtime metrics to Heroku'
+  spec.description   = 'Collect Ruby GC, ObjectSpace, and Puma metrics and report them directly to Heroku Runtime Metrics via HTTP.'
   spec.homepage      = 'https://github.com/heroku/barnes'
   spec.license       = "MIT"
 
@@ -21,12 +21,11 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = '>= 2.2.0'
+  spec.required_ruby_version = '>= 3.1.0'
 
   spec.add_runtime_dependency 'json'
   spec.add_runtime_dependency 'logger'
   spec.add_runtime_dependency 'ostruct'
-  spec.add_runtime_dependency 'statsd-ruby', '~> 1.1'
 
   spec.add_development_dependency 'rack',     '~> 2'
   spec.add_development_dependency 'rake',     '>= 10'
