@@ -31,6 +31,7 @@ module Barnes
       @debug = debug
       @interval = interval
       @panels = panels
+      @stopping = false
 
       @thread = Thread.new {
         Thread.current[:barnes_state] = {}
@@ -42,6 +43,7 @@ module Barnes
         loop do
           begin
             sleep @interval
+            break if @stopping
 
             env = {
               STATE    => Thread.current[:barnes_state],
@@ -63,8 +65,10 @@ module Barnes
       @thread.abort_on_exception = true
     end
 
-    def stop
-      @thread.exit
+    def stop(wait: )
+      @stopping = true
+      @thread.wakeup if @thread.alive?
+      @thread.join if wait
     end
   end
 end

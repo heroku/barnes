@@ -53,7 +53,7 @@ module Barnes
     if @periodic
       debug("Restarting Barnes. Previously started by caller:")
       debug(@caller.join("\n"))
-      @periodic.stop
+      @periodic.stop(wait: false)
     end
 
     @caller = caller
