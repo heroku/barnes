@@ -62,7 +62,6 @@ module Barnes
           end
         end
       }
-      @thread.abort_on_exception = true
     end
 
     def stop(wait: )
