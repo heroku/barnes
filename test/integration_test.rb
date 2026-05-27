@@ -32,6 +32,16 @@ class IntegrationTest < Minitest::Test
     end
   end
 
+  def test_double_start_stops_previous
+    Dir.chdir(fixture_path("rack/workers")) do |dir|
+      WaitForIt.new("bundle exec puma -C ./config.rb",
+        options(DOUBLE_BARNES_BEFORE_FORK: "true")) do |spawn|
+        spawn.wait("Restarting Barnes", 7)
+        expect_spawn_to_contain(spawn, "Restarting Barnes")
+      end
+    end
+  end
+
   def test_workers_on_boot
     Dir.chdir(fixture_path("rack/workers")) do |dir|
       WaitForIt.new("bundle exec puma -C ./config.rb",

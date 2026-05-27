@@ -15,6 +15,14 @@ if ENV["INSERT_BARNES_BEFORE_FORK"]
   end
 end
 
+if ENV["DOUBLE_BARNES_BEFORE_FORK"]
+  before_fork do
+    require 'barnes'
+    Barnes.start(interval: 1)
+    Barnes.start(interval: 1)
+  end
+end
+
 if ENV["INSERT_BARNES_ON_WORKER_BOOT"]
   on_worker_boot do
     require 'barnes'

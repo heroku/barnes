@@ -24,6 +24,9 @@
 module Barnes
   DEFAULT_INTERVAL = 10
   DEFAULT_PANELS   = [].freeze
+  @caller = nil
+  @periodic = nil
+  @mutex = Mutex.new
 
   # Starts the metrics reporting client.
   #
@@ -41,19 +44,34 @@ module Barnes
     url = ENV["HEROKU_METRICS_URL"]
     return unless url
 
-    reporter = Barnes::Reporter.new(url: url)
+    @mutex.synchronize do
+      reporter = Barnes::Reporter.new(url: url)
 
-    panels = panels.dup
-    if panels.empty?
-      panels << Barnes::ResourceUsage.new
+      panels = panels.dup
+      if panels.empty?
+        panels << Barnes::ResourceUsage.new
+      end
+
+      if @periodic
+        debug("Restarting Barnes. Previously started by caller:")
+        debug(@caller.join("\n"))
+        @periodic.stop(wait: false)
+      end
+
+      @caller = caller
+      @periodic = Periodic.new(
+        reporter: reporter,
+        interval: interval,
+        panels:   panels,
+        debug:    ENV['BARNES_DEBUG']
+      )
     end
+  end
 
-    Periodic.new(
-      reporter: reporter,
-      interval: interval,
-      panels:   panels,
-      debug:    ENV['BARNES_DEBUG']
-    )
+  def self.debug(message)
+    if ENV["BARNES_DEBUG"]
+      puts "Barnes: #{message}"
+    end
   end
 end
 

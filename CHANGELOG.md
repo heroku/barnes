@@ -1,5 +1,9 @@
 ## HEAD (unreleased)
 
+## 1.0.1
+
+- Fix: Previously calling `Barnes.start` would result in duplicate reporting threads. Now when this method is called, old threads are stopped before a new thread is started.
+
 ## 1.0.0
 
 - **Breaking**: Replace StatsD with direct HTTP reporting to HEROKU_METRICS_URL

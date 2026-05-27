@@ -26,11 +26,14 @@ require 'json'
 
 module Barnes
   class Periodic
+    attr_reader :thread
+
     def initialize(reporter:, interval: 10, debug: false, panels: [])
       @reporter = reporter
       @debug = debug
       @interval = interval
       @panels = panels
+      @stopping = false
 
       @thread = Thread.new {
         Thread.current[:barnes_state] = {}
@@ -40,31 +43,31 @@ module Barnes
         end
 
         loop do
-          begin
-            sleep @interval
+          sleep @interval
+          break if @stopping
 
-            env = {
-              STATE    => Thread.current[:barnes_state],
-              COUNTERS => {},
-              GAUGES   => {}
-            }
+          env = {
+            STATE    => Thread.current[:barnes_state],
+            COUNTERS => {},
+            GAUGES   => {}
+          }
 
-            @panels.each do |panel|
-              panel.instrument! env[STATE], env[COUNTERS], env[GAUGES]
-            end
-
-            puts env.to_json if @debug
-            @reporter.report env
-          rescue => e
-            $stderr.puts "barnes: error during metrics collection: #{e.class}: #{e.message}"
+          @panels.each do |panel|
+            panel.instrument! env[STATE], env[COUNTERS], env[GAUGES]
           end
+
+          puts env.to_json if @debug
+          @reporter.report env
+        rescue => e
+          $stderr.puts "barnes: error during metrics collection: #{e.class}: #{e.message}"
         end
       }
-      @thread.abort_on_exception = true
     end
 
-    def stop
-      @thread.exit
+    def stop(wait: )
+      @stopping = true
+      @thread.wakeup if @thread.alive?
+      @thread.join if wait
     end
   end
 end
