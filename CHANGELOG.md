@@ -1,6 +1,6 @@
 ## HEAD (unreleased)
 
-- Fix: Previously calling `Barnes.start` would result in duplicate reporting threads. Now when this method is called, old threads are stopped before a new thread being invoked.
+- Fix: Previously calling `Barnes.start` would result in duplicate reporting threads. Now when this method is called, old threads are stopped before a new thread is started.
 
 ## 1.0.0
 
