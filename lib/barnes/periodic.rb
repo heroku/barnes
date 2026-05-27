@@ -26,6 +26,8 @@ require 'json'
 
 module Barnes
   class Periodic
+    attr_reader :thread
+
     def initialize(reporter:, interval: 10, debug: false, panels: [])
       @reporter = reporter
       @debug = debug
