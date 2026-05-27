@@ -43,25 +43,23 @@ module Barnes
         end
 
         loop do
-          begin
-            sleep @interval
-            break if @stopping
+          sleep @interval
+          break if @stopping
 
-            env = {
-              STATE    => Thread.current[:barnes_state],
-              COUNTERS => {},
-              GAUGES   => {}
-            }
+          env = {
+            STATE    => Thread.current[:barnes_state],
+            COUNTERS => {},
+            GAUGES   => {}
+          }
 
-            @panels.each do |panel|
-              panel.instrument! env[STATE], env[COUNTERS], env[GAUGES]
-            end
-
-            puts env.to_json if @debug
-            @reporter.report env
-          rescue => e
-            $stderr.puts "barnes: error during metrics collection: #{e.class}: #{e.message}"
+          @panels.each do |panel|
+            panel.instrument! env[STATE], env[COUNTERS], env[GAUGES]
           end
+
+          puts env.to_json if @debug
+          @reporter.report env
+        rescue => e
+          $stderr.puts "barnes: error during metrics collection: #{e.class}: #{e.message}"
         end
       }
     end
