@@ -32,7 +32,8 @@ module Barnes
 
     ServerError = Class.new(StandardError)
 
-    def initialize(url:, backoff_sleep: ->(n) { sleep(n) })
+    def initialize(url:, backoff_sleep: ->(n) { sleep(n) }, io: $stderr)
+      @io = io
       @uri = URI.parse(url)
       @backoff_sleep = backoff_sleep
       @mutex = Mutex.new
@@ -86,7 +87,7 @@ module Barnes
         when 200..299
           # success
         when 400..499
-          $stderr.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
+          @io.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
         when 500..599
           raise ServerError, "server error #{response.code}"
         end
@@ -101,12 +102,12 @@ module Barnes
           pause *= 2
           retry
         else
-          $stderr.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.class}: #{e.message}"
+          @io.puts "barnes: failed to POST metrics after #{MAX_RETRIES} retries: #{e.class}: #{e.message}"
         end
       rescue => e
         @http&.finish rescue nil
         @http = nil
-        $stderr.puts "barnes: unexpected error posting metrics: #{e.class}: #{e.message}"
+        @io.puts "barnes: unexpected error posting metrics: #{e.class}: #{e.message}"
       end
     end
   end
