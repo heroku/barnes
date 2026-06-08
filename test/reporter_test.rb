@@ -3,6 +3,7 @@ require 'barnes/reporter'
 require 'json'
 require 'socket'
 require 'stringio'
+require 'timecop'
 
 class ReporterTest < Minitest::Test
   def setup
@@ -174,6 +175,50 @@ class ReporterTest < Minitest::Test
 
     wait_for_requests(1)
     assert_equal 1, @requests.size
+  end
+
+  def test_401_is_silent_within_90_seconds
+    io = StringIO.new
+    now = Time.now
+    reporter = Barnes::Reporter.new(
+      url: "http://127.0.0.1:#{@port}/metrics",
+      backoff_sleep: ->(_) {},
+      io: io
+    )
+
+    Timecop.freeze(now) do
+      accept_one_request(status: "401 Unauthorized")
+      reporter.report(Barnes::COUNTERS => { :'GC.count' => 1 }, Barnes::GAUGES => {})
+    end
+    assert_empty io.string
+
+    Timecop.freeze(now + 89) do
+      accept_one_request(status: "401 Unauthorized")
+      reporter.report(Barnes::COUNTERS => { :'GC.count' => 1 }, Barnes::GAUGES => {})
+    end
+    assert_empty io.string
+
+    Timecop.freeze(now + 91) do
+      accept_one_request(status: "401 Unauthorized")
+      reporter.report(Barnes::COUNTERS => { :'GC.count' => 1 }, Barnes::GAUGES => {})
+    end
+    assert_includes io.string, "barnes: metrics POST rejected (401)"
+  end
+
+  def test_401_prints_immediately_with_barnes_debug
+    io = StringIO.new
+    reporter = Barnes::Reporter.new(
+      url: "http://127.0.0.1:#{@port}/metrics",
+      backoff_sleep: ->(_) {},
+      debug: true,
+      io: io
+    )
+
+    Timecop.freeze do
+      accept_one_request(status: "401 Unauthorized")
+      reporter.report(Barnes::COUNTERS => { :'GC.count' => 1 }, Barnes::GAUGES => {})
+    end
+    assert_includes io.string, "barnes: metrics POST rejected (401)"
   end
 
   private

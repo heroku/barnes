@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'minitest', '~> 5.3'
   spec.add_development_dependency "puma",     '~> 5.6'
   spec.add_development_dependency "wait_for_it",     '~> 0.1'
+  spec.add_development_dependency "timecop"
 end
