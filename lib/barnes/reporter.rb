@@ -32,12 +32,14 @@ module Barnes
 
     ServerError = Class.new(StandardError)
 
-    def initialize(url:, backoff_sleep: ->(n) { sleep(n) }, io: $stderr)
+    def initialize(url:, backoff_sleep: ->(n) { sleep(n) }, io: $stderr, debug: ENV["BARNES_DEBUG"])
       @io = io
       @uri = URI.parse(url)
+      @debug = debug
       @backoff_sleep = backoff_sleep
       @mutex = Mutex.new
       @http = nil
+      @first_401 = nil
     end
 
     def report(env)
@@ -86,6 +88,14 @@ module Barnes
         case response.code.to_i
         when 200..299
           # success
+        when 401
+          @first_401 ||= Time.now
+
+          # Quiet expected status code while dyno is shutting down
+          # https://github.com/heroku/barnes/issues/58
+          if @debug || (Time.now - @first_401) > 90 # seconds
+            @io.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
+          end
         when 400..499
           @io.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
         when 500..599
