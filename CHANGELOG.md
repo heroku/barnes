@@ -1,5 +1,7 @@
 ## HEAD (unreleased)
 
+- Fix: Skip logging `metrics POST rejected (401): dynoidmap: no dyno information exists for that UUID` on dyno shutdown. This is accomplished by ignoring 401 status responses from the API for the first 90 seconds. Setting `BARNES_DEBUG=1` will bypass the delay.
+
 ## 1.0.1
 
 - Fix: Previously calling `Barnes.start` would result in duplicate reporting threads. Now when this method is called, old threads are stopped before a new thread is started.
