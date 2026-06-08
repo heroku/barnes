@@ -2,7 +2,7 @@
 
 ## 1.0.1
 
-- Fix: Previously calling `Barnes.start` would result in duplicate reporting threads. Now when this method is called, old threads are stopped before a new thread is started.
+- Fix: Previously, calling `Barnes.start` would result in duplicate reporting threads, which could trigger warnings in the log `barnes: metrics POST rejected (429)`. Now, when this method is called, old threads are stopped before a new thread is started. This will resolve the 429 warnings.
 
 ## 1.0.0
 
