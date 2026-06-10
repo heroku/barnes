@@ -93,7 +93,7 @@ module Barnes
 
           # Quiet expected status code while dyno is shutting down
           # https://github.com/heroku/barnes/issues/58
-          if @debug || (Time.now - @first_401) > 90 # seconds
+          if @debug || (Time.now - @first_401) > 30 # seconds
             @io.puts "barnes: metrics POST rejected (#{response.code}): #{response.body}"
           end
         when 400..499

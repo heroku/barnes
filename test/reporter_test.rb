@@ -192,13 +192,13 @@ class ReporterTest < Minitest::Test
     end
     assert_empty io.string
 
-    Timecop.freeze(now + 89) do
+    Timecop.freeze(now + 29) do
       accept_one_request(status: "401 Unauthorized")
       reporter.report(Barnes::COUNTERS => { :'GC.count' => 1 }, Barnes::GAUGES => {})
     end
     assert_empty io.string
 
-    Timecop.freeze(now + 91) do
+    Timecop.freeze(now + 31) do
       accept_one_request(status: "401 Unauthorized")
       reporter.report(Barnes::COUNTERS => { :'GC.count' => 1 }, Barnes::GAUGES => {})
     end
