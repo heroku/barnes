@@ -40,16 +40,13 @@ module Barnes
     end
 
     def report(env)
-      counters = {}
-      env[Barnes::COUNTERS].each { |k, v| counters["Rack.Server.All.#{k}"] = v }
-
       gauges = {}
       env[Barnes::GAUGES].each { |k, v| gauges["Rack.Server.All.#{k}"] = v }
 
-      count = counters.size + gauges.size
+      count = gauges.size
       return if count == 0
 
-      body = JSON.generate(counters: counters, gauges: gauges)
+      body = JSON.generate(gauges: gauges)
       @mutex.synchronize { post(body, count) }
     end
 

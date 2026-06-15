@@ -22,5 +22,5 @@
 #
 
 module Barnes
-  STATE, COUNTERS, GAUGES = 'barnes.state', 'barnes.counters', 'barnes.gauges'
+  STATE, GAUGES = 'barnes.state', 'barnes.gauges'
 end
