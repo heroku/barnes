@@ -29,7 +29,7 @@ module Barnes
         return {}
       end
 
-      def instrument!(state, counters, gauges)
+      def instrument!(state, gauges)
         gauges['using.puma'] = 1
 
         stats = json_stats
