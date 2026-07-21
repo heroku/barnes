@@ -47,13 +47,12 @@ module Barnes
           break if @stopping
 
           env = {
-            STATE    => Thread.current[:barnes_state],
-            COUNTERS => {},
-            GAUGES   => {}
+            STATE  => Thread.current[:barnes_state],
+            GAUGES => {}
           }
 
           @panels.each do |panel|
-            panel.instrument! env[STATE], env[COUNTERS], env[GAUGES]
+            panel.instrument! env[STATE], env[GAUGES]
           end
 
           puts env.to_json if @debug

@@ -30,8 +30,8 @@ module Barnes
 
   # Starts the metrics reporting client.
   #
-  # Collects Ruby runtime metrics (GC stats, ObjectSpace counts,
-  # Puma pool stats) and POSTs them to HEROKU_METRICS_URL.
+  # Collects Ruby runtime metrics (GC stats and Puma pool stats)
+  # and POSTs them to HEROKU_METRICS_URL.
   #
   # Arguments:
   #
