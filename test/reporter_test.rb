@@ -54,8 +54,7 @@ class ReporterTest < Minitest::Test
 
     reporter = Barnes::Reporter.new(url: "http://127.0.0.1:#{@port}/metrics")
     reporter.report(
-      Barnes::COUNTERS => { :'GC.count' => 5 },
-      Barnes::GAUGES   => { :'pool.capacity' => 40 }
+      Barnes::GAUGES => { :'pool.capacity' => 40, :'GC.heap_free_slots' => 5 }
     )
 
     wait_for_requests(1)
@@ -66,8 +65,9 @@ class ReporterTest < Minitest::Test
     refute_nil req[:headers]["Measurements-Time"]
 
     body = JSON.parse(req[:body])
-    assert_equal 5, body["counters"]["Rack.Server.All.GC.count"]
+    refute body.key?("counters"), body.inspect
     assert_equal 40, body["gauges"]["Rack.Server.All.pool.capacity"]
+    assert_equal 5, body["gauges"]["Rack.Server.All.GC.heap_free_slots"]
   end
 
   def test_report_prefixes_metric_names
@@ -75,21 +75,18 @@ class ReporterTest < Minitest::Test
 
     reporter = Barnes::Reporter.new(url: "http://127.0.0.1:#{@port}/metrics")
     reporter.report(
-      Barnes::COUNTERS => { :'Time.wall' => 100.5 },
-      Barnes::GAUGES   => { :'Objects.FREE' => 9999 }
+      Barnes::GAUGES => { :'threads.max' => 5 }
     )
 
     wait_for_requests(1)
     body = JSON.parse(@requests.first[:body])
-    assert body["counters"].key?("Rack.Server.All.Time.wall")
-    assert body["gauges"].key?("Rack.Server.All.Objects.FREE")
+    assert body["gauges"].key?("Rack.Server.All.threads.max")
   end
 
   def test_report_skips_empty_metrics
     reporter = Barnes::Reporter.new(url: "http://127.0.0.1:#{@port}/metrics")
     reporter.report(
-      Barnes::COUNTERS => {},
-      Barnes::GAUGES   => {}
+      Barnes::GAUGES => {}
     )
 
     assert_equal 0, @requests.size
@@ -107,8 +104,7 @@ class ReporterTest < Minitest::Test
 
     _stderr = capture_stderr do
       reporter.report(
-        Barnes::COUNTERS => { :'GC.count' => 1 },
-        Barnes::GAUGES   => {}
+        Barnes::GAUGES => { :'GC.heap_free_slots' => 1 }
       )
     end
 
@@ -148,8 +144,7 @@ class ReporterTest < Minitest::Test
 
     stderr = capture_stderr do
       reporter.report(
-        Barnes::COUNTERS => { :'GC.count' => 1 },
-        Barnes::GAUGES   => {}
+        Barnes::GAUGES => { :'GC.heap_free_slots' => 1 }
       )
     end
 
@@ -167,8 +162,7 @@ class ReporterTest < Minitest::Test
 
     capture_stderr do
       reporter.report(
-        Barnes::COUNTERS => { :'GC.count' => 1 },
-        Barnes::GAUGES   => {}
+        Barnes::GAUGES => { :'GC.heap_free_slots' => 1 }
       )
     end
 

@@ -35,12 +35,6 @@ module Barnes
         instrument puma_instrument
       end
 
-      require 'barnes/instruments/stopwatch'
-      instrument Barnes::Instruments::Stopwatch.new
-
-      require 'barnes/instruments/object_space_counter'
-      instrument Barnes::Instruments::ObjectSpaceCounter.new
-
       require 'barnes/instruments/ruby_gc'
       instrument Barnes::Instruments::RubyGC.new
     end

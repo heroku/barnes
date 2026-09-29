@@ -1,6 +1,6 @@
 ## Barnes
 
-Ruby runtime metrics for [Heroku Runtime Metrics](https://devcenter.heroku.com/articles/language-runtime-metrics-ruby). Collects GC stats, ObjectSpace counts, and Puma thread/pool metrics and POSTs them directly to `HEROKU_METRICS_URL`.
+Ruby runtime metrics for [Heroku Runtime Metrics](https://devcenter.heroku.com/articles/language-runtime-metrics-ruby). Collects GC stats and Puma thread/pool metrics and POSTs them directly to `HEROKU_METRICS_URL`.
 
 Originally a fork of [trashed](https://github.com/basecamp/trashed).
 

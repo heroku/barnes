@@ -1,5 +1,8 @@
 ## HEAD (unreleased)
 
+- **Breaking**: Instrument `instrument!` interface changed from `instrument!(state, counters, gauges)` to `instrument!(state, gauges)`. Custom panels/instruments must be updated.
+- Stop collecting metrics that the Heroku metrics backend silently drops. Removes the `Stopwatch` and `ObjectSpaceCounter` instruments, trims `RubyGC` to `GC.heap_free_slots`, `GC.total_allocated_objects`, and `GC.total_freed_objects`, and removes the now-unused `counters` payload (reports send `gauges` only).
+
 ## 1.0.1
 
 - Fix: Previously, calling `Barnes.start` would result in duplicate reporting threads, which could trigger warnings in the log `barnes: metrics POST rejected (429)`. Now, when this method is called, old threads are stopped before a new thread is started. This will resolve the 429 warnings.

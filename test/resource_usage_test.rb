@@ -9,21 +9,22 @@ class ResourceUsageTest < Minitest::Test
     @panel.start! @state
   end
 
-  def test_wall_time
-    assert_in_delta 0, counter(:'Time.wall'), 1000
+  def test_emits_whitelisted_gc_gauges
+    gauges = gauges_from_instrument
+    assert gauges.include?(:'GC.heap_free_slots'), gauges.inspect
+    assert gauges.include?(:'GC.total_allocated_objects'), gauges.inspect
+    assert gauges.include?(:'GC.total_freed_objects'), gauges.inspect
   end
 
-  def test_cpu_and_idle_time
-    assert_in_delta 0, counter(:'Time.cpu'), 1000
-    assert_in_delta 0, counter(:'Time.idle'), 1000
-    assert counter(:'Time.pct.cpu')
-    assert counter(:'Time.pct.idle')
+  def test_does_not_emit_non_whitelisted_gc_gauges
+    gauges = gauges_from_instrument
+    refute gauges.include?(:'GC.heap_live_slots'), gauges.inspect
+    refute gauges.include?(:'GC.count'), gauges.inspect
   end
 
-  private def counter(metric)
-    counters = {}
-    @panel.instrument!(@state, counters, {})
-    assert counters.include?(metric), counters.inspect
-    counters[metric]
+  private def gauges_from_instrument
+    gauges = {}
+    @panel.instrument!(@state, gauges)
+    gauges
   end
 end

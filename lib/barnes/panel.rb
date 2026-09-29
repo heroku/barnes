@@ -39,11 +39,11 @@ module Barnes
       end
     end
 
-    # Read the values of each instrument into counter_readings,
-    # and gauge_readings. May have side effects on all arguments.
-    def instrument!(state, counter_readings, gauge_readings)
+    # Read the values of each instrument into gauge_readings.
+    # May have side effects on all arguments.
+    def instrument!(state, gauge_readings)
       @instruments.each do |ins|
-        ins.instrument! state, counter_readings, gauge_readings
+        ins.instrument! state, gauge_readings
       end
     end
   end
