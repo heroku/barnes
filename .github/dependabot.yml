@@ -7,6 +7,10 @@ updates:
     allow:
       # Update transitive dependencies too.
       - dependency-type: "all"
+    ignore:
+      # Applications choose their own versions of these.
+      - dependency-name: "puma"
+      - dependency-name: "rack"
     groups:
       ruby-dependencies:
         update-types:
